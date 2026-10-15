@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+
+*.tar.gz
+*.backup*
+*.bak
+*.before-*
+logs/
+
+# Local SQL updates may contain personal data
+fix-vietnamese.sql
