@@ -10,3 +10,6 @@ logs/
 
 # Local SQL updates may contain personal data
 fix-vietnamese.sql
+
+# Backup files
+compose.yaml.bak-*
