@@ -63,54 +63,92 @@ git clone https://github.com/DTC245010041/portfolio-website-dtc245010041.git
 cd portfolio-website-dtc245010041
 ```
 
-Tạo file `.env` từ mẫu:
+Tạo file cấu hình môi trường:
 
 ```bash
 cp .env.example .env
 nano .env
+chmod 600 .env
 ```
 
-Thay các giá trị mẫu bằng mật khẩu mạnh của riêng bạn. Các biến cần cấu hình gồm:
+Cập nhật các giá trị trong `.env` bằng thông tin riêng của môi trường triển khai. Đảm bảo mật khẩu tài khoản ứng dụng MySQL trong `DB_PASS` và `MYSQL_PASSWORD` tương ứng với nhau theo cấu hình của dự án.
 
-- `DB_PASS`
-- `MYSQL_PASSWORD`
-- `MYSQL_ROOT_PASSWORD`
-
-Đảm bảo `DB_PASS` trùng với `MYSQL_PASSWORD` để ứng dụng sử dụng đúng tài khoản MySQL.
-
-Khởi chạy các dịch vụ:
+Kiểm tra cấu hình Docker Compose:
 
 ```bash
 docker compose config
+```
+
+Khởi chạy dịch vụ:
+
+```bash
 docker compose up -d --build
 docker compose ps
 ```
 
-Kiểm tra log nếu có dịch vụ chưa chạy:
+Nếu có dịch vụ chưa hoạt động, kiểm tra nhật ký:
 
 ```bash
 docker compose logs --tail=100
 ```
 
-Lưu ý: cấu hình network và volume bên ngoài trong `compose.yaml` phải tồn tại trên máy triển khai, hoặc cần điều chỉnh theo môi trường mới trước khi khởi chạy.
+**Lưu ý khi triển khai trên máy mới:** Một số network và volume được khai báo là `external` trong `compose.yaml`. Cần tạo các tài nguyên này trước khi khởi chạy hoặc điều chỉnh cấu hình cho phù hợp với môi trường mới. Không sử dụng volume dữ liệu cũ nếu chưa xác định đúng nguồn dữ liệu.
 
-## 6. Địa chỉ truy cập trên máy triển khai hiện tại
+Không đưa file `.env`, mật khẩu, token hoặc dữ liệu nhạy cảm lên GitHub.
 
-Máy chủ thử nghiệm sử dụng IP `192.168.79.128`.
+## 6. Địa chỉ truy cập
+
+Trong môi trường Ubuntu Server thử nghiệm, máy chủ sử dụng địa chỉ IP nội bộ `192.168.79.128`.
 
 | Thành phần | Địa chỉ |
 |---|---|
-| Website qua Nginx | http://192.168.79.128:8080/ |
-| Trang đăng nhập quản trị | http://192.168.79.128:8080/admin/login.php |
+| Website Portfolio qua Nginx | http://192.168.79.128:8080/ |
+| Trang đăng nhập Admin | http://192.168.79.128:8080/admin/login.php |
 | Grafana | http://192.168.79.128:3000/ |
-| Website PHP trực tiếp (chỉ localhost) | http://127.0.0.1:8081/ |
-| phpMyAdmin (chỉ localhost) | http://127.0.0.1:8082/ |
-| Prometheus (chỉ localhost) | http://127.0.0.1:9090/ |
-| Node Exporter (chỉ localhost) | http://127.0.0.1:9100/ |
+| Ứng dụng PHP trực tiếp | http://127.0.0.1:8081/ |
+| phpMyAdmin | http://127.0.0.1:8082/ |
+| Prometheus | http://127.0.0.1:9090/ |
+| Node Exporter | http://127.0.0.1:9100/ |
 
-Các địa chỉ `127.0.0.1` chỉ truy cập trực tiếp được từ máy Ubuntu. Không mở các cổng quản trị này ra Internet một cách tùy tiện.
+Các địa chỉ `127.0.0.1` chỉ truy cập trực tiếp từ máy Ubuntu. Website và Grafana được bind vào địa chỉ IP nội bộ theo cấu hình hiện tại; việc truy cập từ máy khác phụ thuộc vào kết nối mạng và quy tắc tường lửa.
 
-IP trên là địa chỉ của môi trường thử nghiệm hiện tại; khi triển khai nơi khác, hãy thay bằng địa chỉ máy chủ tương ứng.
+Các địa chỉ trên chỉ áp dụng cho môi trường thử nghiệm. Khi triển khai ở máy khác, cần thay đổi địa chỉ IP và kiểm tra lại cấu hình cổng, network và firewall.
+
+## 9. Kiểm tra sau triển khai
+
+Kiểm tra trạng thái các container:
+
+```bash
+docker compose ps
+```
+
+Kiểm tra cấu hình Nginx:
+
+```bash
+docker exec nginx_demo nginx -t
+```
+
+Kiểm tra website và trang quản trị qua Nginx:
+
+```bash
+curl -I http://192.168.79.128:8080/
+curl -I http://192.168.79.128:8080/admin/login.php
+```
+
+Kiểm tra nhật ký ứng dụng và cơ sở dữ liệu:
+
+```bash
+docker compose logs --tail=50 app
+docker compose logs --tail=50 mysql
+```
+
+Kiểm tra các header bảo mật:
+
+```bash
+curl -sSI http://192.168.79.128:8080/
+```
+
+Đối chiếu kết quả HTTP, trạng thái container và nhật ký để xác nhận các dịch vụ hoạt động đúng.
 
 ## 7. Giám sát và nhật ký
 
